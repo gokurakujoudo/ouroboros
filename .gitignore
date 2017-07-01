@@ -89,3 +89,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
+*.pptx
+Design/python-logo-master-v3-TM-flattened.png
+ouroboros/.idea/*
