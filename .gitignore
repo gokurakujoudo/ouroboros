@@ -92,3 +92,5 @@ ENV/
 *.pptx
 Design/python-logo-master-v3-TM-flattened.png
 ouroboros/.idea/*
+ouroboros/DemoClass.ipynb
+ouroboros/DemoWorkflow.ipynb
