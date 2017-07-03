@@ -6,8 +6,8 @@ import pandas as pd
 from utils import para_not_empty, para_not_null, safe_return
 
 CONST_TABLE_NAME = 'CONST'
-ID_COL_NAME = 'ID'
 TIME_COL_NAME = 'index'
+ID_COL_NAME = 'variable'
 VALUE_COL_NAME = 'value'
 
 
@@ -19,6 +19,11 @@ class DataDefinition:
                 'IS_TIME_SERIES': is_time_series,
                 'IS_DELTA'      : is_delta,
                 'IS_WIDE'       : is_wide}
+
+    @classmethod
+    def new_definition(cls, *args):
+        if len(args):
+            return pd.DataFrame(list(args)).set_index('NAME')
 
 
 def check_name_wrap(method, name_range, key = 'name', arg_id = 0):
