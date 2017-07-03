@@ -123,16 +123,28 @@ class DataProvider:
         start_time = pd.to_datetime(kwargs.get('start_time'))
         end_time = pd.to_datetime(kwargs.get('end_time'))
         table = self._get_table(name)
-        if self._definition.loc['IS_WIDE', name]:
+        return_wide = kwargs.get('return_wide', True)
+        if ~self._definition.loc['IS_WIDE', name]:
             # long table
-            id_col_name = kwargs.get('id_col_name', ID_COL_NAME)
-            index_col_name = kwargs.get('index_col_name', TIME_COL_NAME)
+            id_col_name = kwargs.get('id_col', ID_COL_NAME)
+            index_col_name = kwargs.get('index_col', TIME_COL_NAME)
             table_slice = table[(table[id_col_name].isin(ids)) &
                                 (table[index_col_name] >= start_time) &
                                 (table[index_col_name] <= end_time)]
+            if return_wide:
+                value_col_name = kwargs.get('value_col', VALUE_COL_NAME)
+                return table_slice.pivot(index_col_name, id_col_name, value_col_name)
         else:
             # wide table
             table_slice = table.loc[start_time:end_time, ids]
+            if ~return_wide:
+                id_col_name = kwargs.get('id_col', ID_COL_NAME)
+                index_col_name = kwargs.get('index_col', TIME_COL_NAME)
+                value_col_name = kwargs.get('value_col', VALUE_COL_NAME)
+                table_slice.index.name = index_col_name
+                return table_slice.melt(id_vars = index_col_name,
+                                        var_name = id_col_name,
+                                        value_name = value_col_name).dropna(how = 'any', axis = 0)
         return table_slice
 
     @safe_return
@@ -141,17 +153,24 @@ class DataProvider:
         ids = kwargs.get('ids')
         time_stamps = pd.to_datetime(kwargs.get('time_stamps'))
         table = self._get_table(name)
-        if self._definition.loc['IS_WIDE', name]:
+        id_col_name = kwargs.get('id_col_name', ID_COL_NAME)
+        index_col_name = kwargs.get('index_col_name', TIME_COL_NAME)
+        value_col_name = kwargs.get('value_col_name', VALUE_COL_NAME)
+        if ~self._definition.loc['IS_WIDE', name]:
             # long table
-            id_col_name = kwargs.get('id_col_name', ID_COL_NAME)
-            index_col_name = kwargs.get('index_col_name', TIME_COL_NAME)
-            value_col_name = kwargs.get('value_col_name', VALUE_COL_NAME)
             table_wide = table.pivot(index_col_name, id_col_name, value_col_name)
         else:
             # wide table
             table_wide = table
-        table_asof = table_wide.loc[time_stamps, ids]
-        return table_asof
+        table_asof = table_wide[ids].asof(time_stamps)
+        return_wide = kwargs.get('return_wide', True)
+        if return_wide:
+            return table_asof
+        else:
+            table_asof.index.name = index_col_name
+            return table_asof.melt(id_vars = index_col_name,
+                                   var_name = id_col_name,
+                                   value_name = value_col_name).dropna(how = 'any', axis = 0)
 
     @safe_return
     def get_consts(self, ids, cols) -> Optional[pd.DataFrame]:
