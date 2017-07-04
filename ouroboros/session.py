@@ -1,7 +1,10 @@
-from dataprovider import DataProvider, DataDefinition
+import ipywidgets.widgets as wid
+import pandas as pd
+from IPython.display import display
+
+from dataprovider import DataDefinition, DataProvider
 from gendata import GenData
 from strategy import Strategy
-import pandas as pd
 
 
 class InternalDataProvider:
@@ -59,7 +62,7 @@ class Session:
                                   end = self._end_time,
                                   freq = ef.freq)
             if not pd.isnull(ef.lag):
-                ts += pd.Timedelta(ef.lag)
+                ts += pd.to_timedelta(ef.lag)
             ts = ts[(ts >= self._start_time) & (ts <= self._end_time)]
             sch = pd.DataFrame(index = ts)
             sch['PRIORITY'] = ef.priority
@@ -67,10 +70,16 @@ class Session:
             schs.append(sch)
         return pd.concat(schs).sort_values(by = 'PRIORITY').sort_index()
 
-    def run(self, status_callback = None):
+    def run(self, progress_bar = True):
         self._cur_data.clear()
         self._gen_data.clear()
         self._schedule = self._build_schedule()
+
+        if progress_bar:
+            min_t, max_t = self._schedule.index.min(), self._schedule.index.max()
+            pgb = wid.IntProgress(min = min_t.value, max = max_t.value, value = min_t.value,
+                                  layout = wid.Layout(width = '100%'))
+            display(pgb)
 
         for index in self._schedule.index:
             try:
@@ -79,9 +88,7 @@ class Session:
             except Exception as ex:
                 result = repr(ex)
             self._schedule.loc[index, 'RETURN'] = result
-            if status_callback is not None:
-                status_callback(time = index, result = result)
+            if progress_bar:
+                pgb.value = index.value
 
-        if status_callback is not None:
-            status_callback(finished = True)
         pass

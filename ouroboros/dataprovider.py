@@ -3,7 +3,7 @@ from typing import Optional
 
 import pandas as pd
 
-from utils import para_not_empty, para_not_null, safe_return
+from utils import safe_return
 
 CONST_TABLE_NAME = 'CONST'
 TIME_COL_NAME = 'index'
@@ -133,28 +133,30 @@ class DataProvider:
         return self._data.get(name)
 
     @safe_return
-    @para_not_empty({'ids'})
-    @para_not_null({'start_time', 'end_time'})
     def _get_ts(self, name, **kwargs) -> Optional[pd.DataFrame]:
         ids = kwargs.get('ids')
         start_time = pd.to_datetime(kwargs.get('start_time'))
         end_time = pd.to_datetime(kwargs.get('end_time'))
         table = self._get_table(name)
         return_wide = kwargs.get('return_wide', True)
-        if ~self._definition.loc[name, 'IS_WIDE']:
+        if not self._definition.loc[name, 'IS_WIDE']:
             # long table
             id_col_name = kwargs.get('id_col', ID_COL_NAME)
             index_col_name = kwargs.get('index_col', TIME_COL_NAME)
-            table_slice = table[(table[id_col_name].isin(ids)) &
-                                (table[index_col_name] >= start_time) &
+            table_slice = table[(table[index_col_name] >= start_time) &
                                 (table[index_col_name] <= end_time)]
+            if ids is not None:
+                table_slice = table_slice[table[id_col_name].isin(ids)]
             if return_wide:
                 value_col_name = kwargs.get('value_col', VALUE_COL_NAME)
                 return table_slice.pivot(index_col_name, id_col_name, value_col_name)
         else:
             # wide table
-            table_slice = table.loc[start_time:end_time, ids]
-            if ~return_wide:
+            if ids is None:
+                table_slice = table.loc[start_time:end_time]
+            else:
+                table_slice = table.loc[start_time:end_time, ids]
+            if not return_wide:
                 id_col_name = kwargs.get('id_col', ID_COL_NAME)
                 index_col_name = kwargs.get('index_col', TIME_COL_NAME)
                 value_col_name = kwargs.get('value_col', VALUE_COL_NAME)
@@ -165,7 +167,6 @@ class DataProvider:
         return table_slice
 
     @safe_return
-    @para_not_empty({'ids', 'time_stamps'})
     def _get_ts_asof(self, name, **kwargs) -> Optional[pd.DataFrame]:
         ids = kwargs.get('ids')
         time_stamps = pd.to_datetime(kwargs.get('time_stamps'))
@@ -179,7 +180,10 @@ class DataProvider:
         else:
             # wide table
             table_wide = table
-        table_asof = table_wide[ids].apply(lambda x: x.asof(time_stamps))
+        if ids is None:
+            table_asof = table_wide.apply(lambda x: x.asof(time_stamps))
+        else:
+            table_asof = table_wide[ids].apply(lambda x: x.asof(time_stamps))
         return_wide = kwargs.get('return_wide', True)
         if return_wide:
             return table_asof
