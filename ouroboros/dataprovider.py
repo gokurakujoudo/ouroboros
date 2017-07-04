@@ -162,7 +162,7 @@ class DataProvider:
         else:
             # wide table
             table_wide = table
-        table_asof = table_wide[ids].asof(time_stamps)
+        table_asof = table_wide[ids].apply(lambda x: x.asof(time_stamps))
         return_wide = kwargs.get('return_wide', True)
         if return_wide:
             return table_asof
