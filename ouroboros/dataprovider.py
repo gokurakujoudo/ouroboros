@@ -27,8 +27,20 @@ class DataDefinition:
 
     @classmethod
     def match(cls, strategy, provider):
-        # TODO
-        pass
+        if not isinstance(strategy, pd.DataFrame):
+            return False
+        if not isinstance(provider, pd.DataFrame):
+            return False
+        dict_s = {i: s for i, s in strategy.iterrows()}
+        dict_p = {i: s for i, s in provider.iterrows()}
+        for k, v_s in dict_s.items():
+            v_p = dict_p.get(k)
+            if v_p is None:
+                return False
+            elif not v_s.equals(v_p):
+                return False
+            continue
+        return True
 
 
 def check_name_wrap(method, name_range, key = 'name', arg_id = 0):
@@ -65,7 +77,7 @@ class DataProvider:
 
         self.get_table = check_name_wrap(self._get_table, self._tables)
         self.get_ts = check_name_wrap(self._get_ts, self._time_pos_tables | self._time_delta_tables)
-        self.get_ts_asof = check_name_wrap(self._get_ts, self._time_pos_tables)
+        self.get_ts_asof = check_name_wrap(self._get_ts_asof, self._time_pos_tables)
 
     def clear_data(self):
         self._data = {}
@@ -129,7 +141,7 @@ class DataProvider:
         end_time = pd.to_datetime(kwargs.get('end_time'))
         table = self._get_table(name)
         return_wide = kwargs.get('return_wide', True)
-        if ~self._definition.loc['IS_WIDE', name]:
+        if ~self._definition.loc[name, 'IS_WIDE']:
             # long table
             id_col_name = kwargs.get('id_col', ID_COL_NAME)
             index_col_name = kwargs.get('index_col', TIME_COL_NAME)
@@ -161,7 +173,7 @@ class DataProvider:
         id_col_name = kwargs.get('id_col_name', ID_COL_NAME)
         index_col_name = kwargs.get('index_col_name', TIME_COL_NAME)
         value_col_name = kwargs.get('value_col_name', VALUE_COL_NAME)
-        if ~self._definition.loc['IS_WIDE', name]:
+        if ~self._definition.loc[name, 'IS_WIDE']:
             # long table
             table_wide = table.pivot(index_col_name, id_col_name, value_col_name)
         else:

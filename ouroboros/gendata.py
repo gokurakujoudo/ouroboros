@@ -8,6 +8,9 @@ class GenData:
     def __init__(self):
         self._data = {}
 
+    def clear(self):
+        self._data.clear()
+
     def update(self, time, name, data):
         table = self._data.get(name)
         if table is None:
@@ -21,7 +24,7 @@ class GenData:
     @safe_return
     def get(self, time, name):
         table = self._data.get(name)
-        if len(table):
+        if table is not None:
             return table.asof(time)
         return None
 

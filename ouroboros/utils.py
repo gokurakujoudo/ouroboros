@@ -35,3 +35,5 @@ def safe_return(method):
             logging.warning('method {} raises a exception: {}'.format(method.__name__, repr(ex)))
         return None
     return try_run
+
+
