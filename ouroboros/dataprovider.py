@@ -25,6 +25,11 @@ class DataDefinition:
         if len(args):
             return pd.DataFrame(list(args)).set_index('NAME')
 
+    @classmethod
+    def match(cls, strategy, provider):
+        # TODO
+        pass
+
 
 def check_name_wrap(method, name_range, key = 'name', arg_id = 0):
     def checked_name(*arg, **kwargs):
@@ -176,3 +181,7 @@ class DataProvider:
     def get_consts(self, ids, cols) -> Optional[pd.DataFrame]:
         table = self._get_table(CONST_TABLE_NAME)
         return table.loc[ids, cols]
+
+    @property
+    def definition(self):
+        return self._definition

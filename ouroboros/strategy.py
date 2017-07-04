@@ -1,3 +1,5 @@
+import pandas as pd
+
 class EventFunction:
     def __init__(self, func, priority = 1, freq = '1d', lag = None):
         """
@@ -18,7 +20,7 @@ class EventFunction:
 
 
 class Strategy:
-    def __init__(self, data_def, event_funcs: list, arg_dict: dict = None):
+    def __init__(self, data_def: pd.DataFrame, event_funcs: list, arg_dict: dict = None):
         """
         Initialize a new instance of Strategy
         :param data_def: data definition

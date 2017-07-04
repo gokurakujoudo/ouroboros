@@ -1,4 +1,4 @@
-from dataprovider import DataProvider
+from dataprovider import DataProvider, DataDefinition
 from gendata import GenData
 from strategy import Strategy, EventFunction
 import pandas as pd
@@ -11,9 +11,8 @@ class InternalDataProvider:
         self.get_const = None
         self.get_table = None
         self.update_gen = None
-        self.update_gen_part = None
         self.get_gen = None
-        self.get_gen_table = None
+        self.get_gen_all = None
 
 
 class Session:
@@ -23,6 +22,9 @@ class Session:
         :type strategy: Strategy
         :type data: DataProvider
         """
+        if not DataDefinition.match(strategy.data_def, data.definition):
+            raise TypeError("definitions don't match")
+
         self._strategy = strategy
         self._start_time = pd.to_datetime(start_time)
         self._end_time = pd.to_datetime(end_time)
@@ -37,9 +39,8 @@ class Session:
         idp.get_const = self._data.get_consts
         idp.get_table = self._data.get_table
         idp.update_gen = self._gen_data.update
-        idp.update_gen_part = self._gen_data.update_part
         idp.get_gen = self._gen_data.get
-        idp.get_gen_table = self._gen_data.get_table
+        idp.get_gen_all = self._gen_data.get_all
         self.idp = idp
         pass
 

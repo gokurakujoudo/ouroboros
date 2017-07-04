@@ -2,7 +2,7 @@ import pandas as pd
 
 from utils import safe_return
 
-GEN_DATA_COL_NAME = 'NAME'
+GEN_DATA_COL_NAME = 'DATA'
 
 class GenData:
     def __init__(self):
